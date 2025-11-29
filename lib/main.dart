@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'pages/todo_home_page.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
   runApp(const TodoApp());
 }
 
@@ -11,12 +14,12 @@ class TodoApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final baseTheme = ThemeData(
-      useMaterial3: true,
+    final baseTheme = ThemeData.from(
       colorScheme: ColorScheme.fromSeed(
         seedColor: const Color(0xFF6750A4),
         brightness: Brightness.light,
       ),
+      useMaterial3: true,
     );
 
     return MaterialApp(
@@ -56,7 +59,6 @@ class TodoApp extends StatelessWidget {
             borderRadius: BorderRadius.all(Radius.circular(16)),
           ),
         ),
-        useMaterial3: true,
       ),
       home: const TodoHomePage(),
     );

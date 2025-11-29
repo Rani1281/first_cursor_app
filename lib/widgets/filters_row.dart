@@ -33,9 +33,9 @@ class FiltersRow extends StatelessWidget {
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(28),
-              color: theme.colorScheme.surface.withOpacity(0.82),
+              color: theme.colorScheme.surface.withValues(alpha: 0.82),
               border: Border.all(
-                color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+                color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
             ),
             child: Column(

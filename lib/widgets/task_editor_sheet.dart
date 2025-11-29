@@ -80,7 +80,7 @@ class _TaskEditorSheetState extends State<TaskEditorSheet> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
+                    color: Colors.black.withValues(alpha: 0.12),
                     blurRadius: 30,
                     offset: const Offset(0, 16),
                   ),

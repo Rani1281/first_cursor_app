@@ -13,6 +13,8 @@
 ## Code Style
 
 - When creating new functions or classes, include a docstring of 1-3 lines, describing what it does. Prioritize using three slashes (///) when possible for clearance from the user interface.
+- 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss
+- 'surfaceVariant' is deprecated and shouldn't be used. Use surfaceContainerHighest instead.
 
 ## Architecture
 

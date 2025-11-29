@@ -20,8 +20,8 @@ class EmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
                 gradient: LinearGradient(
                   colors: [
-                    theme.colorScheme.primary.withOpacity(0.15),
-                    theme.colorScheme.secondary.withOpacity(0.12),
+                    theme.colorScheme.primary.withValues(alpha: 0.15),
+                    theme.colorScheme.secondary.withValues(alpha: 0.12),
                   ],
                 ),
               ),

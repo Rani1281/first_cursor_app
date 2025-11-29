@@ -1,4 +1,7 @@
-class Task {
+import 'package:hive/hive.dart';
+
+/// Represents a task with all its properties.
+class Task extends HiveObject {
   Task({
     required this.id,
     required this.title,

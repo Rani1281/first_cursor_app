@@ -8,6 +8,7 @@ import '../models/group_mode.dart';
 import '../widgets/empty_state.dart';
 import '../widgets/filters_row.dart';
 import '../widgets/task_editor_sheet.dart';
+import '../repositories/task_repository.dart';
 
 class TodoHomePage extends StatefulWidget {
   const TodoHomePage({super.key});
@@ -18,15 +19,40 @@ class TodoHomePage extends StatefulWidget {
 
 class _TodoHomePageState extends State<TodoHomePage> {
   final List<Task> _tasks = [];
-  int _nextId = 0;
+  final TaskRepository _taskRepository = TaskRepository();
+  bool _isLoading = true;
   SortMode _sortMode = SortMode.targetDate;
   GroupMode _groupMode = GroupMode.none;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTasks();
+  }
+
+  /// Loads tasks from local storage.
+  Future<void> _loadTasks() async {
+    await _taskRepository.init();
+    setState(() {
+      _tasks.clear();
+      _tasks.addAll(_taskRepository.getAllTasks());
+      _isLoading = false;
+    });
+  }
+
+  // /// Saves all tasks to local storage.
+  // Future<void> _saveTasks() async {
+  //   for (final task in _tasks) {
+  //     await _taskRepository.updateTask(task);
+  //   }
+  // }
 
   void _toggleDone(Task task, bool? value) {
     setState(() {
       final index = _tasks.indexWhere((t) => t.id == task.id);
       if (index == -1) return;
       _tasks[index] = _tasks[index].copyWith(isDone: value ?? false);
+      _taskRepository.updateTask(_tasks[index]);
     });
   }
 
@@ -35,12 +61,14 @@ class _TodoHomePageState extends State<TodoHomePage> {
       final index = _tasks.indexWhere((t) => t.id == task.id);
       if (index == -1) return;
       _tasks[index] = _tasks[index].copyWith(isStarred: !task.isStarred);
+      _taskRepository.updateTask(_tasks[index]);
     });
   }
 
   void _deleteTask(Task task) {
     setState(() {
       _tasks.removeWhere((t) => t.id == task.id);
+      _taskRepository.deleteTask(task.id);
     });
   }
 
@@ -59,16 +87,16 @@ class _TodoHomePageState extends State<TodoHomePage> {
 
     setState(() {
       if (task == null) {
-        _tasks.add(
-          Task(
-            id: _nextId++,
-            title: details.title,
-            targetDate: details.targetDate,
-            isStarred: details.isStarred,
-            isDone: details.isDone,
-            createdAt: DateTime.now(),
-          ),
+        final newTask = Task(
+          id: _taskRepository.getNextId(),
+          title: details.title,
+          targetDate: details.targetDate,
+          isStarred: details.isStarred,
+          isDone: details.isDone,
+          createdAt: DateTime.now(),
         );
+        _tasks.add(newTask);
+        _taskRepository.createTask(newTask);
       } else {
         final index = _tasks.indexWhere((t) => t.id == task.id);
         if (index == -1) {
@@ -80,6 +108,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
           isStarred: details.isStarred,
           isDone: details.isDone,
         );
+        _taskRepository.updateTask(_tasks[index]);
       }
     });
   }
@@ -178,7 +207,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
           ? TextDecoration.lineThrough
           : TextDecoration.none,
       color: task.isDone
-          ? theme.colorScheme.onSurface.withOpacity(0.6)
+          ? theme.colorScheme.onSurface.withValues(alpha: 0.6)
           : theme.colorScheme.onSurface,
     );
 
@@ -200,15 +229,15 @@ class _TodoHomePageState extends State<TodoHomePage> {
             end: Alignment.bottomRight,
             colors: [
               theme.colorScheme.surface,
-              theme.colorScheme.surfaceVariant.withOpacity(0.35),
+              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
             ],
           ),
           border: Border.all(
-            color: theme.colorScheme.outlineVariant.withOpacity(0.5),
+            color: theme.colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 18,
               offset: const Offset(0, 12),
             ),
@@ -325,7 +354,9 @@ class _TodoHomePageState extends State<TodoHomePage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: theme.colorScheme.secondaryContainer.withOpacity(0.4),
+              color: theme.colorScheme.secondaryContainer.withValues(
+                alpha: 0.4,
+              ),
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
@@ -372,7 +403,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: theme.colorScheme.primary.withOpacity(0.18),
+              color: theme.colorScheme.primary.withValues(alpha: 0.18),
               blurRadius: 30,
               offset: const Offset(0, 20),
             ),
@@ -396,7 +427,9 @@ class _TodoHomePageState extends State<TodoHomePage> {
                     ? 'You\'re all caught up. Enjoy your day!'
                     : 'You have $active active ${active == 1 ? 'task' : 'tasks'}.',
                 style: theme.textTheme.bodyMedium?.copyWith(
-                  color: theme.colorScheme.onPrimaryContainer.withOpacity(0.8),
+                  color: theme.colorScheme.onPrimaryContainer.withValues(
+                    alpha: 0.8,
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
@@ -422,7 +455,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
                   value: progress,
                   minHeight: 8,
                   backgroundColor: theme.colorScheme.onPrimaryContainer
-                      .withOpacity(0.1),
+                      .withValues(alpha: 0.1),
                   valueColor: AlwaysStoppedAnimation<Color>(
                     theme.colorScheme.primary,
                   ),
@@ -455,6 +488,10 @@ class _TodoHomePageState extends State<TodoHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     final sortedTasks = _sortedTasks();
     final sections = _sectionsFor(sortedTasks);
     final showEmptyState = sortedTasks.isEmpty;
@@ -485,7 +522,7 @@ class _TodoHomePageState extends State<TodoHomePage> {
                   colors: [
                     Theme.of(
                       context,
-                    ).colorScheme.primaryContainer.withOpacity(0.6),
+                    ).colorScheme.primaryContainer.withValues(alpha: 0.6),
                     Theme.of(context).colorScheme.surface,
                   ],
                 ),
@@ -546,7 +583,7 @@ class _MetaChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer.withOpacity(0.5),
+        color: theme.colorScheme.secondaryContainer.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -585,8 +622,8 @@ class _HeaderStat extends StatelessWidget {
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          color: Colors.white.withOpacity(0.18),
-          border: Border.all(color: Colors.white.withOpacity(0.25)),
+          color: Colors.white.withValues(alpha: 0.18),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.25)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -595,16 +632,15 @@ class _HeaderStat extends StatelessWidget {
               label.toUpperCase(),
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                 letterSpacing: 0.6,
-                color: Colors.white.withOpacity(0.8),
+                // color: Colors.white.withValues(alpha: 0.8),
+                color: Colors.black,
               ),
             ),
             const SizedBox(height: 4),
             Text(
               value,
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                color: accentColor.computeLuminance() > 0.5
-                    ? Colors.black.withOpacity(0.8)
-                    : Colors.white,
+                color: Colors.black.withValues(alpha: 0.5),
                 fontWeight: FontWeight.bold,
               ),
             ),

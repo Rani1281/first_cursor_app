@@ -27,9 +27,11 @@ class DropdownChip<T> extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            color: theme.colorScheme.surfaceVariant.withOpacity(0.4),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(
+              alpha: 0.4,
+            ),
             border: Border.all(
-              color: theme.colorScheme.outlineVariant.withOpacity(0.8),
+              color: theme.colorScheme.outlineVariant.withValues(alpha: 0.8),
             ),
           ),
           child: Padding(
